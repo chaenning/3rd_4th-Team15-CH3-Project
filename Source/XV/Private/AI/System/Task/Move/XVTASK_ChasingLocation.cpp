@@ -44,7 +44,7 @@ void UXVTASK_ChasingLocation::TickTask(UBehaviorTreeComponent& OwnerComp, uint8*
 	// 이동 요청 생성
 	FAIMoveRequest MoveRequest;
 	MoveRequest.SetGoalLocation(TargetVector);				// 목표 지점
-	MoveRequest.SetAcceptanceRadius(30.f);					// 얼마나 가까이 가야 도착으로 간주할지
+	MoveRequest.SetAcceptanceRadius(100.f);					// 얼마나 가까이 가야 도착으로 간주할지
 	MoveRequest.SetReachTestIncludesAgentRadius(true);		// 콜리전 반경 고려 여부 설정
 	MoveRequest.SetUsePathfinding(true);					// 경로 탐색 사용
 	MoveRequest.SetAllowPartialPath(true);					// 부분 경로 허용

@@ -41,6 +41,8 @@ public:
 	UInputAction* SubWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* OpenDoorAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ReloadAction;
 	
 	virtual void BeginPlay() override;
 };

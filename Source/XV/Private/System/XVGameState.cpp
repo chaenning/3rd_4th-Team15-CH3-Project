@@ -2,7 +2,7 @@
 
 AXVGameState::AXVGameState()
 {
-	TimeLimit = 60.0f;
+	TimeLimit = 600.0f;
 	
 	SpawnedEnemyCount = 0;
 	KilledEnemyCount = 0;

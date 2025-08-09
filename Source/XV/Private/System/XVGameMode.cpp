@@ -1,10 +1,7 @@
 #include "System/XVGameMode.h"
 #include "System/XVGameState.h"
 #include "System/XVGameInstance.h"
-#include "World/ElevatorDoor.h"
 #include "Kismet/GameplayStatics.h"
-#include "World/SpawnVolume.h"
-#include "AI/Character/Base/XVEnemyBase.h"
 #include "GameFramework/PlayerController.h"
 
 
@@ -19,7 +16,7 @@ void AXVGameMode::BeginPlay()
 	
 	FString CurrentMapName = GetWorld()->GetMapName();
 	CurrentMapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
-	if (CurrentMapName != "LobbyLevel")	
+	if (CurrentMapName != "BaseLevel")	
 	{
 		StartGame();
 	}
@@ -44,15 +41,8 @@ void AXVGameMode::StartGame()
 			}
 		}
 	}
-	if (AXVGameState* GS = GetGameState<AXVGameState>())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Level Starts!"));
-		GS->SpawnedEnemyCount = 0;
-		GS->KilledEnemyCount = 0;
-	}
-	
-	SpawnEnemies();
 
+	Super::StartGame();
 	if (AXVGameState* GS = GetGameState<AXVGameState>())
 	{
 		GetWorldTimerManager().SetTimer(
@@ -66,86 +56,28 @@ void AXVGameMode::StartGame()
 	
 void AXVGameMode::SpawnEnemies() const
 {
-	TArray<AActor*> FoundVolumes;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
-	
-	if (FoundVolumes.Num() == 0) return;
-
-	if (AXVGameState* GS = GetGameState<AXVGameState>())
-	{	
-		TArray<ASpawnVolume*> ValidVolumes;
-		for (AActor* Actor : FoundVolumes)
-		{
-			if (ASpawnVolume* Volume = Cast<ASpawnVolume>(Actor))
-			{
-				if (!GS->IsWaveTriggered && Volume->ActorHasTag("Patrol"))
-				{
-					ValidVolumes.Add(Volume);
-				}
-				else if (GS->IsWaveTriggered && Volume->ActorHasTag("Wave"))
-				{
-					ValidVolumes.Add(Volume);
-				}
-			}
-		}	
-		
-		int32 EnemyToSpawn;
-		if (!GS->IsWaveTriggered) EnemyToSpawn = GS->SpawnPatrolEnemyCount;
-		else EnemyToSpawn = GS->SpawnAllEnemyCount - GS->SpawnPatrolEnemyCount;
-		
-		const int32 SpawnVolumeCount = ValidVolumes.Num();
-		if (SpawnVolumeCount == 0) return;
-		for (int32 i = 0; i < EnemyToSpawn; i++)
-		{
-			ASpawnVolume* SpawnVolume = ValidVolumes[i % SpawnVolumeCount];
-			if (!SpawnVolume) continue;
-			
-			AActor* SpawnActor = SpawnVolume->SpawnRandomEnemy();
-			if (SpawnActor && SpawnActor->IsA(AXVEnemyBase::StaticClass()))
-			{
-				GS->SpawnedEnemyCount++;
-			}
-		}
-	}
+	Super::SpawnEnemies();
 }
 
 void AXVGameMode::OnEnemyKilled()
 {
-	OnWaveTriggered();
-	if (AXVGameState* GS = GetGameState<AXVGameState>())
-	{
-		GS->KilledEnemyCount++;
-		if (GS->KilledEnemyCount > 0 && GS->KilledEnemyCount >= GS->SpawnedEnemyCount)
-		{
-			GS->CanActiveArrivalPoint = true;
-		}	
-	}
+	Super::OnEnemyKilled();
 }
 
 void AXVGameMode::OnWaveTriggered()
 {
 	
-	if (AXVGameState* GS = GetGameState<AXVGameState>())
-	{
-		GS->CanActiveArrivalPoint = false;
-		if (GS->IsWaveTriggered) return;
-		
-		GS->IsWaveTriggered = true;
-		SpawnEnemies();
-	}
+	Super::OnWaveTriggered();
 }
 
 void AXVGameMode::OnTimeLimitExceeded()
 {
-	EndGame(false);
+	Super::OnTimeLimitExceeded();
 }
 
 void AXVGameMode::EndGame(bool bIsClear)
 {
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-	{
-		PC->SetPause(true);	
-	}
+	Super::EndGame(bIsClear);
 	
 	if (bIsClear)
 	{
@@ -161,7 +93,7 @@ void AXVGameMode::EndGame(bool bIsClear)
 					UE_LOG(LogTemp, Warning, TEXT("Level %d Clear!"), XVGI->CurrentLevelIdx + 1);
 					XVGI->CurrentLevelIdx++;
 					XVGI->IsWaiting = true;
-					UGameplayStatics::OpenLevel(GetWorld(), "LobbyLevel");
+					UGameplayStatics::OpenLevel(GetWorld(), "BaseLevel");
 				}
 				else
 				{
