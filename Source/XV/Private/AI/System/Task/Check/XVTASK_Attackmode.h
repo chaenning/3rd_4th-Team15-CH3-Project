@@ -21,9 +21,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector PlayerLocationKey;
-	
-private:
-	// MoveTo 호출 시간 제한을 위한 변수
-	UPROPERTY()
-	float LastMoveTime;
 };

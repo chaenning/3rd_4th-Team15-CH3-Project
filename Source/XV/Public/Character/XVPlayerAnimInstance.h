@@ -7,9 +7,6 @@
 #include "XVPlayerAnimInstance.generated.h"
 
 
-class AGunBase;
-class UAnimMontage;
-
 UCLASS()
 class XV_API UXVPlayerAnimInstance : public UAnimInstance
 {
@@ -17,19 +14,10 @@ class XV_API UXVPlayerAnimInstance : public UAnimInstance
 	
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerAnim")
-	UAnimMontage* AttackAnimMontage;
+	class UAnimMontage* AttackAnimMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerAnim")
-	UAnimMontage* EquipAnimMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "PlayerAnim")
-	UAnimMontage* UnequipAnimMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "PlayerAnim")
-	UAnimMontage* ReloadAnimMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "PlayerAnim")
-	UAnimMontage* DieAnimMontage;
+	class UAnimMontage* ChangeAnimMontage;
 	
-	void PlayAttackAnim(AGunBase* Weapon);
-	void PlayWeaponEquipAnim(AGunBase* Weapon);
-	void PlayWeaponUnequipAnim();
-	void PlayReloadAnim(AGunBase* Weapon);
-	void PlayDieAnim();
+	void PlayAttackAnim();
+	void PlayGunChangeAnim();
 };

@@ -6,8 +6,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "AI/Character/Base/XVEnemyBase.h"
+#include "System/XVGameMode.h"
 #include "System/XVGameState.h"
-#include "System/GM_XVStartLevel.h"
 
 DEFINE_LOG_CATEGORY(Log_XV_AI);
 
@@ -91,11 +91,6 @@ void AXVControllerBase::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	
 	APawn* ControlledPawn = GetPawn();
-
-	AXVEnemyBase* Controll_AI = Cast<AXVEnemyBase>(ControlledPawn);
-
-	if (true == Controll_AI->bIsDead) return;
-	
 	FVector MyLocation = ControlledPawn->GetActorLocation();
 
 	//[1] 본인 위치 실시간 업데이트
@@ -141,12 +136,6 @@ void AXVControllerBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AXVControllerBase::OnTargetInfoUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	APawn* ControlledPawn = GetPawn();
-	
-	AXVEnemyBase* Controll_AI = Cast<AXVEnemyBase>(ControlledPawn);
-
-	if (true == Controll_AI->bIsDead) return;
-	
 	// 액터 감지 되지 않았거나 블랙보드 없는지 확인
     if (!Actor || !AIBlackBoard)
     {
@@ -179,15 +168,9 @@ void AXVControllerBase::OnTargetInfoUpdated(AActor* Actor, FAIStimulus Stimulus)
     DrawDebugString(GetWorld(), Actor->GetActorLocation() + FVector(0, 0, 100), StatusText, nullptr, bWasSuccessfullySensed ? FColor::Green : FColor::Red, 2.0f,true);
 	
 	// 게임모드 업데이트
-	if (AGM_XVStartLevel* StartGameMode = Cast<AGM_XVStartLevel>(GetWorld()->GetAuthGameMode()))
+	if (AXVGameMode* GameMode = Cast<AXVGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		if (!StartGameMode->IsOutdoor)
-		{
-			if (AXVBaseGameMode* BaseGameMode = Cast<AXVBaseGameMode>(GetWorld()->GetAuthGameMode()))
-			{
-				BaseGameMode->OnWaveTriggered();
-			}
-		}
+		GameMode->OnWaveTriggered();
 	}
 }
 

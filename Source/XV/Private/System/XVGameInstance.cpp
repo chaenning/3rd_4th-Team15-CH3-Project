@@ -3,5 +3,6 @@
 UXVGameInstance::UXVGameInstance()
 {
 	CurrentLevelIdx = 0;
-	IsWaiting = false;
+	IsWaiting = true;
 }
+

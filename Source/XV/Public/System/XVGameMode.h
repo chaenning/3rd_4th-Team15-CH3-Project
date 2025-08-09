@@ -1,11 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "XVBaseGameMode.h"
+#include "GameFramework/GameMode.h"
 #include "XVGameMode.generated.h"
 
 UCLASS()
-class XV_API AXVGameMode : public AXVBaseGameMode
+class XV_API AXVGameMode : public AGameMode
 {
 	GENERATED_BODY()
 
@@ -14,12 +14,12 @@ public:
 
 	virtual void BeginPlay() override;
 
-	virtual void StartGame() override;
-	virtual void SpawnEnemies() const override;
-	virtual void OnEnemyKilled() override;
-	virtual void OnWaveTriggered() override;
-	virtual void OnTimeLimitExceeded() override;
-	virtual void EndGame(bool bIsClear) override;
+	void StartGame();
+	void SpawnEnemies() const;
+	void OnEnemyKilled();
+	void OnWaveTriggered();
+	void OnTimeLimitExceeded();
+	void EndGame(bool bIsClear);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Level")
 	int32 MaxLevel;

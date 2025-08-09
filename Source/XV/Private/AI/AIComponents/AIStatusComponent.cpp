@@ -1,7 +1,5 @@
 ﻿#include "AI/AIComponents/AIStatusComponent.h"
 
-#include <System/XVBaseGameMode.h>
-
 UAIStatusComponent::UAIStatusComponent()
 	: Health(100)
 	, AttackDamage(10)
@@ -12,10 +10,8 @@ UAIStatusComponent::UAIStatusComponent()
 void UAIStatusComponent::TakeDamage(float Damage)
 {
 	Health -= Damage;
-	
-	if (Health <= 0.f)
+	if (Health <= 0)
 	{
-		Health = 0.f;
+		GetOwner()->Destroy();
 	}
-	
 }

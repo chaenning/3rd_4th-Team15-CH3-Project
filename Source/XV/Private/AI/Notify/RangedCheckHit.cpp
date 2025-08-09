@@ -5,12 +5,6 @@
 #include "AI/AIComponents/AIStatusComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
-#include "NiagaraFunctionLibrary.h"
-#include "AI/System/AIController/Base/XVControllerBase.h"
-#include "BehaviorTree/BlackboardComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "NiagaraSystem.h"
-#include "Sound/SoundBase.h"
 
 void URangedCheckHit::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -22,27 +16,15 @@ void URangedCheckHit::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenc
     AXVEnemyBase* Enemy = Cast<AXVEnemyBase>(Owner);
     if (!Enemy) return;
 
-    AXVControllerBase* AIController = Cast<AXVControllerBase>(Enemy->GetController());
-    bool CheckAvoiding = AIController ? AIController->AIBlackBoard->GetValueAsBool(TEXT("bIsAvoiding")) : false;
-
-    if (CheckAvoiding)
-    {
-        return;
-    }
-
-    // 플레이어 캐릭터를 찾음 (싱글플레이 기준)
-    AXVCharacter* PlayerChar = Cast<AXVCharacter>(UGameplayStatics::GetPlayerCharacter(Enemy->GetWorld(), 0));
-    if (!PlayerChar) return;
-
     FVector Start = Enemy->GetActorLocation() + Enemy->GetActorForwardVector() * 80.0f;
-    FVector End = PlayerChar->GetActorLocation();
+    FVector End = Start + Enemy->GetActorForwardVector() * TraceDistance;
 
-    FRotator Orientation = (End - Start).Rotation();
+    FRotator Orientation = Enemy->GetActorRotation();
 
     // 트레이스 박스 시각화용
-    //DrawDebugBox(Enemy->GetWorld(), Start, BoxHalfSize, Orientation.Quaternion(), FColor::Blue, false, 2.0f, 0, 2.0f);
-    //DrawDebugBox(Enemy->GetWorld(), End, BoxHalfSize, Orientation.Quaternion(), FColor::Green, false, 2.0f, 0, 2.0f);
-    //DrawDebugLine(Enemy->GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 3.0f);
+    DrawDebugBox(Enemy->GetWorld(), Start, BoxHalfSize, Orientation.Quaternion(), FColor::Blue, false, 2.0f, 0, 2.0f);
+    DrawDebugBox(Enemy->GetWorld(), End, BoxHalfSize, Orientation.Quaternion(), FColor::Green, false, 2.0f, 0, 2.0f);
+    DrawDebugLine(Enemy->GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 3.0f);
 
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
@@ -59,7 +41,7 @@ void URangedCheckHit::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenc
         ObjectTypes,
         false,
         IgnoreActors,
-        EDrawDebugTrace::None,
+        EDrawDebugTrace::ForDuration,
         OutHits,
         true
     );
@@ -79,25 +61,27 @@ void URangedCheckHit::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenc
                 BlockCheckHit,
                 TraceStart,
                 TraceEnd,
-                ECollisionChannel::ECC_Visibility,
+                ECollisionChannel::ECC_Visibility, // 벽 체크: 프로젝트에 맞게 채널 지정
                 FCollisionQueryParams(FName(TEXT("RangedHitBlock")), false, Enemy)
             );
 
-            //DrawDebugLine(Enemy->GetWorld(),
-            //    TraceStart,
-            //    TraceEnd,
-            //    bBlocked ? FColor::Red : FColor::Green,
-            //   false, 2.0f, 0, 2.5f);
+            // 디버그: 벽에 막히는지 확인
+            DrawDebugLine(Enemy->GetWorld(),
+                TraceStart,
+                TraceEnd,
+                bBlocked ? FColor::Red : FColor::Green,
+                false, 2.0f, 0, 2.5f);
 
+            // (A) 벽에 막혀있다면(맞는 캐릭터 이전에 막는 액터가 있다면) 명중X
             if (bBlocked && (BlockCheckHit.GetActor() != Character))
             {
-                continue;
+                continue; // 넘어감 (다음 캐릭터 Hit 검사)
             }
 
+            // (B) 명중 확률 체크
             float RandomValue = FMath::FRand();
             if (RandomValue < HitProbability)
             {
-                PlayHitEffects(Enemy->GetWorld(), Start);
                 float Damage = 10.f;
                 if (UAIStatusComponent* Status = Enemy->FindComponentByClass<UAIStatusComponent>())
                     Damage = Status->AttackDamage;
@@ -105,44 +89,10 @@ void URangedCheckHit::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenc
             }
             else
             {
-                PlayHitEffects(Enemy->GetWorld(), Start);
+                // 미스 처리, 사운드 등
             }
             return; // 한 명만 판정 후 종료
         }
     }
     // 아무도 맞지 않으면 미스 처리 (사운드 등)
-}
-
-
-void URangedCheckHit::PlayHitEffects(UWorld* World, const FVector& SpawnLocation)
-{
-    if (!World) return;
-
-    FVector AcitveLocation = SpawnLocation + FVector(-18.0f, 20.0f, 68.0f);
-    
-    if (NiagaraEffect_MuzzleFlash)
-    {
-        UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-            World,
-            NiagaraEffect_MuzzleFlash,
-            AcitveLocation
-        );
-    }
-    if (NiagaraEffect_ShellEject)
-    {
-        UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-            World,
-            NiagaraEffect_ShellEject,
-            AcitveLocation+FVector(-10.0f, -50.0f, 0.0f)
-        );
-    }
-
-    if (HitSound)
-    {
-        UGameplayStatics::PlaySoundAtLocation(
-            World,
-            HitSound,
-            AcitveLocation
-        );
-    }
 }

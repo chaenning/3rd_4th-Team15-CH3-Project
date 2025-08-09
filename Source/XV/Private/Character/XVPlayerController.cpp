@@ -13,8 +13,7 @@ AXVPlayerController::AXVPlayerController()
 	  PickUpAction(nullptr),
 	  MainWeaponAction(nullptr),
 	  SubWeaponAction(nullptr),
-	  OpenDoorAction(nullptr),
-	  ReloadAction(nullptr)
+	  OpenDoorAction(nullptr)
 {
 }
 
